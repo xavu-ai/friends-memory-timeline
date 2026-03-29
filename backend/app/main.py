@@ -13,6 +13,14 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan handler."""
+    # Import models to register them with Base.metadata
+    from app.models import event, edit_log  # noqa: F401
+    from app.db.session import engine
+    from app.models.base import Base
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database tables created")
     yield
 
 

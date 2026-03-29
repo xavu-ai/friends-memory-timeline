@@ -1,16 +1,16 @@
 services:
-  api:
+  backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     ports:
       - "6100:6100"
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/friends_memory
-      - PASSWORDS=${FRIEND_PASSWORDS:-["secret1","secret2","secret3"]}
       - ALLOWED_ORIGINS=["http://localhost:8100"]
       - UPLOAD_DIR=/app/uploads
       - MAX_UPLOAD_SIZE=10485760
+      - PASSWORDS=${FRIEND_PASSWORDS:-["secret1","secret2","secret3"]}
     depends_on:
       db:
         condition: service_healthy
@@ -21,6 +21,17 @@ services:
       retries: 3
       start_period: 10s
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8100:8100"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+
   db:
     image: postgres:16-alpine
     environment:
@@ -29,8 +40,6 @@ services:
       - POSTGRES_PASSWORD=postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d friends_memory"]
       interval: 5s
