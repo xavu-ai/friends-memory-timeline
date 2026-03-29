@@ -1,8 +1,8 @@
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 RUN pip install uv
 WORKDIR /app
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen
+COPY pyproject.toml .
+RUN uv sync --no-dev
 
 FROM python:3.11-slim
 RUN useradd -m --uid=1000 appuser
