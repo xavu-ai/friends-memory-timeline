@@ -1,12 +1,10 @@
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.routers.health import router as health_router
-from app.routers.events import router as events_router
-from app.routers.audit import router as audit_router
+from app.api.v1.router import router as api_v1_router
 
 logger = logging.getLogger(__name__)
 
@@ -25,23 +23,19 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(health_router)
-app.include_router(events_router)
-app.include_router(audit_router)
+app.include_router(api_v1_router)
 
 
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.detail},
-    )
+@app.get("/healthz")
+async def healthz() -> dict[str, str]:
+    """Health check endpoint."""
+    return {"status": "ok"}
 
 
 @app.exception_handler(Exception)
