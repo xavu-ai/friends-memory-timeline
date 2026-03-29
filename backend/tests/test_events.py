@@ -1,11 +1,9 @@
 import pytest
-import sqlalchemy
 from datetime import date
 from uuid import uuid4
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.event import Event
-from app.models.edit_log import EditLog
 from app.services.auth_service import create_access_token
 
 

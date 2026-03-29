@@ -1,4 +1,3 @@
-import pytest
 from app.services.auth_service import verify_password, create_access_token, decode_token
 
 
@@ -9,7 +8,6 @@ class TestAuthService:
             "app.services.auth_service.settings",
             type("Settings", (), {"password_list": ["pwd1", "pwd2"]})(),
         )
-        from app.services.auth_service import settings
         assert verify_password("pwd1") is True
         assert verify_password("pwd2") is True
 

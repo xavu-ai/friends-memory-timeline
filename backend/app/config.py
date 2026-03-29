@@ -1,5 +1,4 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Any
 
 
 class Settings(BaseSettings):
@@ -16,9 +15,9 @@ class Settings(BaseSettings):
     def password_list(self) -> list[str]:
         import json
         try:
-            return json.loads(self.PASSWORDS)
+            return list(json.loads(self.PASSWORDS))
         except json.JSONDecodeError:
             return []
 
 
-settings = Settings()
+settings = Settings()  # type: ignore[call-arg]

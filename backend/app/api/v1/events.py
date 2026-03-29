@@ -59,7 +59,7 @@ async def create_event_endpoint(
     try:
         event = await create_event(db, event_data, password_hash)
         return EventResponse.model_validate(event)
-    except Exception as e:
+    except Exception:
         await db.rollback()
         raise HTTPException(status_code=500, detail="Failed to create event")
 
@@ -78,7 +78,7 @@ async def update_event_endpoint(
     try:
         updated = await update_event(db, event, event_data, password_hash)
         return EventResponse.model_validate(updated)
-    except Exception as e:
+    except Exception:
         await db.rollback()
         raise HTTPException(status_code=500, detail="Failed to update event")
 
@@ -95,6 +95,6 @@ async def delete_event_endpoint(
         raise HTTPException(status_code=404, detail="Event not found")
     try:
         await delete_event(db, event, password_hash)
-    except Exception as e:
+    except Exception:
         await db.rollback()
         raise HTTPException(status_code=500, detail="Failed to delete event")
