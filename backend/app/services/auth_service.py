@@ -1,30 +1,46 @@
-import json
+import hashlib
+from datetime import datetime, timedelta, timezone
+from jose import jwt
 from app.config import settings
 
 
-def validate_friend_password(password: str) -> str | None:
-    """
-    Validate the friend password and return the friend_id if valid.
-    Returns None if password is invalid.
-    """
-    friend_passwords = settings.friend_passwords
+def _hash_password(password: str) -> str:
+    """Create a SHA256 hash of the password for audit logging."""
+    return hashlib.sha256(password.encode()).hexdigest()
 
-    # Try JSON format first
+
+def verify_password(password: str) -> bool:
+    """Check if password is in the allowed list."""
+    return password in settings.password_list
+
+
+def create_access_token(password: str) -> tuple[str, int]:
+    """Create a JWT access token. Returns (token, expires_in_seconds)."""
+    expires_delta = timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + expires_delta
+    password_hash = _hash_password(password)
+
+    payload = {
+        "sub": password_hash,
+        "exp": expire,
+        "iat": datetime.now(timezone.utc),
+        "type": "access",
+    }
+
+    token = jwt.encode(
+        payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM
+    )
+    return token, int(expires_delta.total_seconds())
+
+
+def decode_token(token: str) -> str | None:
+    """Decode JWT and return password_hash (sub) if valid, else None."""
     try:
-        mapping = json.loads(friend_passwords)
-        if isinstance(mapping, dict):
-            for friend_id, pwd in mapping.items():
-                if pwd == password:
-                    return friend_id
-    except json.JSONDecodeError:
-        pass
-
-    # Try comma-separated format: "friend1:pass1,friend2:pass2"
-    pairs = friend_passwords.split(",")
-    for pair in pairs:
-        if ":" in pair:
-            friend_id, pwd = pair.split(":", 1)
-            if pwd == password:
-                return friend_id.strip()
-
-    return None
+        payload = jwt.decode(
+            token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+        )
+        if payload.get("type") != "access":
+            return None
+        return payload.get("sub")
+    except Exception:
+        return None

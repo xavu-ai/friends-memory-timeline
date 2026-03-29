@@ -1,15 +1,23 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import AnyUrl
 
 
 class Settings(BaseSettings):
-    database_url: AnyUrl
-    friend_passwords: str
-    cors_origins: list[str] = ["http://localhost:8100"]
-    upload_dir: str = "./uploads"
-    max_upload_size: int = 10 * 1024 * 1024
+    DATABASE_URL: str
+    JWT_SECRET: str
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 60
+    ALLOWED_ORIGINS: list[str] = ["http://localhost:8100"]
+    PASSWORDS: str = "[]"
 
     model_config = SettingsConfigDict(env_file=".env")
 
+    @property
+    def password_list(self) -> list[str]:
+        import json
+        try:
+            return list(json.loads(self.PASSWORDS))
+        except json.JSONDecodeError:
+            return []
 
-settings = Settings()
+
+settings = Settings()  # type: ignore[call-arg]
